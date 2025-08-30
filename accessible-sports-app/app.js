@@ -678,7 +678,15 @@
           const isAndroid = /Android/.test(ua);
           if (isFirefox) {
             if (isAndroid) {
-              alert('Firefox for Android: tap ⋮ → Install → Add to Home Screen');
+              // Show QR section for quick install on phone
+              try {
+                const url = PUBLIC_APP_URL;
+                const img = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
+                if (el.qrImg) el.qrImg.src = img;
+                if (el.shareUrl) el.shareUrl.textContent = url;
+                if (el.qrSection) el.qrSection.hidden = false;
+                if (el.copyLink) el.copyLink.focus();
+              } catch {}
             } else {
               alert('Firefox desktop does not support installable PWAs. Use Chrome/Edge to install, or add a shortcut via your OS.');
             }
@@ -687,6 +695,20 @@
           }
         }
       });
+    }
+
+    // QR helpers
+    if (el.copyLink) {
+      el.copyLink.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(PUBLIC_APP_URL);
+          el.copyLink.textContent = 'Copied!';
+          setTimeout(() => (el.copyLink.textContent = 'Copy Link'), 1200);
+        } catch {}
+      });
+    }
+    if (el.closeQR) {
+      el.closeQR.addEventListener('click', () => { if (el.qrSection) el.qrSection.hidden = true; });
     }
   }
 
@@ -801,7 +823,8 @@
         const keys = await caches.keys();
         await Promise.all(keys.map(k => caches.delete(k)));
       } catch (e) { /* ignore */ }
-      location.reload(true);
+      const base = location.origin + location.pathname;
+      location.replace(base + (base.includes('?') ? '&' : '?') + 'v=' + Date.now());
     });
   }
 

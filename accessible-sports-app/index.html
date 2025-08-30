@@ -82,7 +82,23 @@
       <small>Demo app optimized for low-vision accessibility.</small>
     </footer>
 
-    
+    <!-- Install on Phone (QR) -->
+    <section id="qrSection" class="qr-section" hidden aria-label="Install on phone">
+      <div class="qr-wrap">
+        <div class="row" style="align-items:center; gap: 1rem;">
+          <strong>Install on your phone</strong>
+          <button id="closeQR" class="btn" aria-label="Close">Close</button>
+        </div>
+        <div class="row" style="align-items:center; gap: 1rem; margin-top: .5rem;">
+          <img id="qrImg" alt="QR code for this app URL" width="200" height="200" />
+          <div>
+            <div style="word-break: break-all; max-width: 40ch;" id="shareUrl"></div>
+            <button id="copyLink" class="btn" aria-label="Copy link to clipboard">Copy Link</button>
+            <p class="hint">Android (Firefox): Menu ⋮ → Install • iPhone (Safari): Share → Add to Home Screen</p>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <script src="app.js?v=0.6.5"></script>
   </body>
