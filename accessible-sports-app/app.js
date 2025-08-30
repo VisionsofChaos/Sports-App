@@ -673,7 +673,18 @@
             console.log('Install choice', choice && choice.outcome);
           } catch {}
         } else {
-          alert('Installation tips:\n\n- iPhone/iPad (Safari): Share → Add to Home Screen\n- Android (Chrome): Menu ⋮ → Install app or Add to Home Screen\n- Desktop (Chrome/Edge): Address bar install icon or Menu → Install app');
+          const ua = navigator.userAgent || '';
+          const isFirefox = /Firefox\//.test(ua);
+          const isAndroid = /Android/.test(ua);
+          if (isFirefox) {
+            if (isAndroid) {
+              alert('Firefox for Android: tap ⋮ → Install → Add to Home Screen');
+            } else {
+              alert('Firefox desktop does not support installable PWAs. Use Chrome/Edge to install, or add a shortcut via your OS.');
+            }
+          } else {
+            alert('Installation tips:\n\n- iPhone/iPad (Safari): Share → Add to Home Screen\n- Android (Chrome/Edge): Menu ⋮ → Install app or Add to Home Screen\n- Desktop (Chrome/Edge): Address bar install icon or Menu → Install app');
+          }
         }
       });
     }
@@ -704,13 +715,12 @@
     el.overlay.hidden = false;
     // Move focus to title; close with outside click or ESC
     el.articleTitle.tabIndex = -1;
-    el.articleTitle.focus();
-    // Robust scroll lock: fix body to prevent background scroll/jitter
+    try { el.articleTitle.focus({ preventScroll: true }); } catch { el.articleTitle.focus(); }
+    // Scroll lock: prefer overflow hidden to avoid Firefox jump
     try {
       scrollYBeforeOpen = window.scrollY || window.pageYOffset || 0;
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollYBeforeOpen}px`;
-      document.body.style.width = '100%';
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
     } catch {}
 
     // If this headline is a video, show a Play button linking to ESPN
@@ -767,9 +777,8 @@
     if (lastFocus && lastFocus.focus) lastFocus.focus();
     // Restore scroll position and body styles
     try {
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
       if (typeof scrollYBeforeOpen === 'number') {
         window.scrollTo(0, scrollYBeforeOpen);
       }
