@@ -778,10 +778,10 @@
             if (text && text.trim()) {
               const hasMarkup = /<\s*(a|p|ul|ol|li|br|h2|h3|h4|blockquote|img)\b/i.test(text);
               if (hasMarkup) {
-                el.articleBody.innerHTML = sanitizeStoryHtml(text) + `<p><a href="${target}" target="_blank" rel="noopener">Open original</a></p>`;
+                el.articleBody.innerHTML = filterArticleHtml(sanitizeStoryHtml(text)) + `<p><a href="${target}" target="_blank" rel="noopener">Open original</a></p>`;
               } else {
                 const paras = text.trim().split(/\n\s*\n/).map(p => `<p>${p.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</p>`).join('');
-                el.articleBody.innerHTML = paras + `<p><a href="${target}" target="_blank" rel="noopener">Open original</a></p>`;
+                el.articleBody.innerHTML = filterArticleHtml(sanitizeStoryHtml(paras)) + `<p><a href="${target}" target="_blank" rel="noopener">Open original</a></p>`;
               }
               return;
             }
@@ -866,10 +866,39 @@
     return tmpl.innerHTML;
   }
 
+  function filterArticleHtml(html) {
+    try {
+      const tmpl = document.createElement('template');
+      tmpl.innerHTML = html;
+      const nodes = Array.from(tmpl.content.querySelectorAll('p, a'));
+      for (const n of nodes) {
+        const text = (n.textContent || '').trim();
+        let remove = false;
+        // Remove AP promo/footer paragraphs
+        if (/get\s+poll\s+alerts/i.test(text) || /AP\s+college\s+football:/i.test(text)) remove = true;
+        // Remove AP links and their parent paragraphs
+        if (!remove && n.tagName === 'A') {
+          try {
+            const href = n.getAttribute('href') || '';
+            const u = new URL(href, location.href);
+            if (/\.apnews\.com$/i.test(u.hostname)) remove = true;
+          } catch {}
+        }
+        if (remove) {
+          const p = n.tagName === 'P' ? n : n.closest('p');
+          (p || n).remove();
+        }
+      }
+      return tmpl.innerHTML;
+    } catch {
+      return html;
+    }
+  }
+
   function formatStoryHtml(input) {
     const html = String(input || '');
     const hasBlocks = /<(p|ul|ol|li|br|h2|h3|h4|blockquote|img)\b/i.test(html);
-    if (hasBlocks) return sanitizeStoryHtml(html);
+    if (hasBlocks) return filterArticleHtml(sanitizeStoryHtml(html));
     // Convert plain text with newlines into paragraphs and line breaks
     const normalized = html
       .replace(/\r\n/g, '\n')
@@ -881,7 +910,7 @@
       const body = lines.map((l, i) => (i > 0 ? '<br>' : '') + escapeHtml(l)).join('');
       return `<p>${body}</p>`;
     }).join('');
-    return sanitizeStoryHtml(paragraphs);
+    return filterArticleHtml(sanitizeStoryHtml(paragraphs));
   }
 
   function escapeHtml(s) {
