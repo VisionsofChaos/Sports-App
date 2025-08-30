@@ -162,8 +162,9 @@ body {
 .overlay {
   position: fixed;
   inset: 0;
-  background: color-mix(in oklab, var(--bg) 80%, transparent);
-  backdrop-filter: blur(4px);
+  /* Opaque backdrop to avoid visible background jumping */
+  background: color-mix(in oklab, var(--bg) 96%, transparent);
+  backdrop-filter: none;
   display: grid;
   justify-content: center;
   align-items: start;

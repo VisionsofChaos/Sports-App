@@ -805,8 +805,13 @@
     const toRemove = [];
     while (walker.nextNode()) {
       const el = walker.currentNode;
-      if (!allowed.has(el.tagName)) toRemove.push(el);
+      if (!allowed.has(el.tagName)) { toRemove.push(el); continue; }
       if (el.tagName === 'A') {
+        // Keep only safe href; drop all other attributes
+        const href = el.getAttribute('href') || '';
+        const safe = /^(https?:)?\/\//i.test(href) ? href : '';
+        [...el.attributes].forEach(a => el.removeAttribute(a.name));
+        if (safe) el.setAttribute('href', safe);
         el.setAttribute('target','_blank');
         el.setAttribute('rel','noopener');
       } else if (el.tagName === 'IMG') {
@@ -814,11 +819,11 @@
         const src = el.getAttribute('src') || '';
         const alt = el.getAttribute('alt') || '';
         [...el.attributes].forEach(a => el.removeAttribute(a.name));
-        el.setAttribute('src', src);
+        if (src) el.setAttribute('src', src);
         el.setAttribute('alt', alt);
       } else {
-        el.removeAttribute('onclick');
-        el.removeAttribute('onmouseover');
+        // Strip all attributes from other elements
+        [...el.attributes].forEach(a => el.removeAttribute(a.name));
       }
     }
     for (const n of toRemove) {
