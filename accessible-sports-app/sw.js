@@ -1,11 +1,13 @@
-const CACHE_NAME = 'a11y-sports-shell-v2';
-const RUNTIME = 'a11y-sports-runtime-v2';
+const CACHE_NAME = 'a11y-sports-shell-v4';
+const RUNTIME = 'a11y-sports-runtime-v4';
 const APP_SHELL = [
   './',
   './index.html',
   './styles.css',
   './app.js',
-  './manifest.webmanifest'
+  './manifest.webmanifest',
+  './icons/icon-192.png',
+  './icons/icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {

@@ -1,5 +1,6 @@
 (() => {
-  const APP_VERSION = '0.6.0';
+  const APP_VERSION = '0.6.2';
+  const PUBLIC_APP_URL = 'https://visionsofchaos.github.io/Sports-App/';
   const state = {
     scale: parseFloat(localStorage.getItem('a11y_scale')) || 1.25,
     theme: localStorage.getItem('a11y_theme') || 'light',
@@ -36,6 +37,12 @@
     refresh: document.getElementById('refreshData'),
     updateApp: document.getElementById('updateApp'),
     installApp: document.getElementById('installApp'),
+    shareMobile: document.getElementById('shareMobile'),
+    qrSection: document.getElementById('qrSection'),
+    qrImg: document.getElementById('qrImg'),
+    shareUrl: document.getElementById('shareUrl'),
+    copyLink: document.getElementById('copyLink'),
+    closeQR: document.getElementById('closeQR'),
     lastUpdated: document.getElementById('lastUpdated'),
     overlay: document.getElementById('articleOverlay'),
     articleTitle: document.getElementById('articleTitle'),
@@ -621,6 +628,10 @@
       state.deferredInstall = e;
       if (el.installApp) el.installApp.hidden = false;
     });
+    window.addEventListener('appinstalled', () => {
+      if (el.installApp) el.installApp.hidden = true;
+      state.deferredInstall = null;
+    });
     if (el.installApp) {
       el.installApp.addEventListener('click', async () => {
         if (state.deferredInstall) {
@@ -636,11 +647,43 @@
         }
       });
     }
+
+    // QR / share to mobile
+    if (el.shareMobile) {
+      el.shareMobile.addEventListener('click', () => {
+        try {
+          const isLocal = ['localhost', '127.0.0.1', '::1'].includes(location.hostname);
+          const url = isLocal ? PUBLIC_APP_URL : location.href;
+          if (el.qrImg) {
+            const encoded = encodeURIComponent(url);
+            el.qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encoded}`;
+          }
+          if (el.shareUrl) el.shareUrl.textContent = url;
+          if (el.qrSection) el.qrSection.hidden = false;
+          if (el.copyLink) el.copyLink.focus();
+        } catch {}
+      });
+    }
+    if (el.copyLink) {
+      el.copyLink.addEventListener('click', async () => {
+        try {
+          const isLocal = ['localhost', '127.0.0.1', '::1'].includes(location.hostname);
+          const url = isLocal ? PUBLIC_APP_URL : location.href;
+          await navigator.clipboard.writeText(url);
+          el.copyLink.textContent = 'Copied!';
+          setTimeout(() => (el.copyLink.textContent = 'Copy Link'), 1200);
+        } catch {}
+      });
+    }
+    if (el.closeQR) {
+      el.closeQR.addEventListener('click', () => { if (el.qrSection) el.qrSection.hidden = true; });
+    }
   }
 
   document.addEventListener('DOMContentLoaded', init);
   // In-app article viewer
   let lastFocus = null;
+  let scrollYBeforeOpen = 0;
   async function openArticle(item, sourceEl) {
     lastFocus = sourceEl || null;
     el.articleTitle.textContent = item.title || 'Story';
@@ -663,6 +706,13 @@
     // Move focus to title; close with outside click or ESC
     el.articleTitle.tabIndex = -1;
     el.articleTitle.focus();
+    // Robust scroll lock: fix body to prevent background scroll/jitter
+    try {
+      scrollYBeforeOpen = window.scrollY || window.pageYOffset || 0;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollYBeforeOpen}px`;
+      document.body.style.width = '100%';
+    } catch {}
 
     // Try to load full article body from API if available
     try {
@@ -678,7 +728,23 @@
           return;
         }
       }
-      // Fallback: if summary exists, show it
+      // Fallback 1: try readability proxy on web URL
+      if (item.url) {
+        try {
+          const target = item.url.startsWith('http') ? item.url : ('https://' + item.url.replace(/^\/+/, ''));
+          const proxied = 'https://r.jina.ai/http/' + target.replace(/^https?:\/\//, '');
+          const res = await fetch(proxied, { cache: 'no-store' });
+          if (res.ok) {
+            const text = await res.text();
+            if (text && text.trim()) {
+              const paras = text.trim().split(/\n\s*\n/).map(p => `<p>${p.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</p>`).join('');
+              el.articleBody.innerHTML = paras + `<p><a href="${target}" target="_blank" rel="noopener">Open original</a></p>`;
+              return;
+            }
+          }
+        } catch {}
+      }
+      // Fallback 2: if summary exists, show it
       el.articleBody.textContent = item.summary || 'Full story unavailable. Please try again later.';
     } catch (e) {
       el.articleBody.textContent = item.summary || 'Full story unavailable. Please try again later.';
@@ -687,8 +753,22 @@
   function closeArticle() {
     el.overlay.hidden = true;
     if (lastFocus && lastFocus.focus) lastFocus.focus();
+    // Restore scroll position and body styles
+    try {
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      if (typeof scrollYBeforeOpen === 'number') {
+        window.scrollTo(0, scrollYBeforeOpen);
+      }
+    } catch {}
   }
   el.overlay.addEventListener('click', (e) => { if (e.target === el.overlay) closeArticle(); });
+  try {
+    el.overlay.addEventListener('touchmove', (e) => {
+      if (e.target === el.overlay) e.preventDefault();
+    }, { passive: false });
+  } catch {}
   document.addEventListener('keydown', (e) => { if (!el.overlay.hidden && e.key === 'Escape') closeArticle(); });
 
   // Update App: unregister SW, clear caches, reload

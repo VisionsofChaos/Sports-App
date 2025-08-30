@@ -80,6 +80,7 @@ body {
 }
 
 .brand { display: flex; align-items: center; gap: var(--space-2); }
+.brand-logo { width: calc(28px * var(--scale)); height: calc(28px * var(--scale)); max-width: 48px; max-height: 48px; border-radius: 8px; box-shadow: 0 0 0 2px rgba(0,0,0,0.05); }
 .brand h1 { font-size: 1.6rem; margin: 0; }
 .brand-icon { font-size: 1.8rem; }
 
@@ -163,22 +164,31 @@ body {
   background: color-mix(in oklab, var(--bg) 80%, transparent);
   backdrop-filter: blur(4px);
   display: grid;
-  place-items: center;
+  justify-content: center;
+  align-items: start;
+  padding: var(--space-4) 0;
+  overscroll-behavior: none;
+  touch-action: none;
+  overflow: hidden;
   z-index: 100;
 }
 .overlay-content {
   width: min(960px, 92vw);
-  max-height: 90vh;
+  max-height: 90vh; /* fallback */
+  max-height: 90dvh; /* reduce address bar jump on mobile */
   background: var(--bg);
   color: var(--text);
   border: 2px solid var(--border);
   border-radius: var(--radius);
   padding: var(--space-3);
   overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
 }
 .overlay-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); padding-bottom: 6px; }
 .overlay-title { margin: 0; font-size: 1.4rem; }
-.article-image { width: 100%; height: auto; border-radius: calc(var(--radius) - 4px); margin: 8px 0; }
+.article-image { width: 100%; height: auto; border-radius: calc(var(--radius) - 4px); margin: 8px 0; aspect-ratio: 16 / 9; object-fit: cover; }
 .article-body { font-size: 1.1rem; line-height: 1.6; }
 .article-body p { margin: 0 0 var(--space-2); }
 .article-body h2, .article-body h3, .article-body h4 { margin: var(--space-3) 0 var(--space-2); }
