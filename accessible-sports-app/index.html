@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Accessible Sports</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="manifest" href="manifest.webmanifest" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="app-header" role="banner">
+      <div class="brand">
+        <span aria-hidden="true" class="brand-icon" title="Ball">🏈</span>
+        <h1>Accessible Sports</h1>
+      </div>
+
+      <div class="controls" role="group" aria-label="Display controls">
+        <div class="control-group" aria-label="Text size">
+          <button id="decreaseText" class="btn" aria-label="Decrease text size">A−</button>
+          <button id="increaseText" class="btn" aria-label="Increase text size">A+</button>
+        </div>
+        <label for="themeSelect" class="visually-hidden">Theme</label>
+        <select id="themeSelect" class="select" aria-label="Theme selector">
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
+          <option value="high-contrast">High Contrast</option>
+        </select>
+        <button id="refreshData" class="btn" aria-label="Refresh live data">Refresh</button>
+        <button id="installApp" class="btn" aria-label="Install this app">Install App</button>
+        <button id="updateApp" class="btn" aria-label="Update app and clear cache">Update App</button>
+        <span id="lastUpdated" class="muted-text" aria-live="polite" aria-atomic="true"></span>
+      </div>
+    </header>
+
+    <nav class="tabs" role="tablist" aria-label="Primary">
+      <button role="tab" id="tab-scores" aria-controls="panel-scores" aria-selected="true" class="tab">Scores</button>
+      <button role="tab" id="tab-headlines" aria-controls="panel-headlines" aria-selected="false" class="tab">Headlines</button>
+      <button role="tab" id="tab-stories" aria-controls="panel-stories" aria-selected="false" class="tab">Team Stories</button>
+      <button role="tab" id="tab-myteams" aria-controls="panel-myteams" aria-selected="false" class="tab">My Teams</button>
+    </nav>
+
+    <main id="main" class="app-main" role="main">
+      <section id="panel-scores" role="tabpanel" aria-labelledby="tab-scores">
+        <h2 class="section-title">Live & Recent Scores</h2>
+        <div id="scoresList" aria-live="polite"></div>
+      </section>
+
+      <section id="panel-headlines" role="tabpanel" aria-labelledby="tab-headlines" hidden>
+        <h2 class="section-title">Top Headlines</h2>
+        <div id="headlinesList" class="card-list" aria-live="polite"></div>
+      </section>
+
+      <section id="panel-stories" role="tabpanel" aria-labelledby="tab-stories" hidden>
+        <h2 class="section-title">Stories for My Teams</h2>
+        <p class="hint">Based on your favorites. Prefilled with Tampa Bay teams.</p>
+        <div id="storiesList" class="card-list" aria-live="polite"></div>
+      </section>
+
+      <section id="panel-myteams" role="tabpanel" aria-labelledby="tab-myteams" hidden>
+        <h2 class="section-title">My Teams</h2>
+        <p class="hint">Select favorites to prioritize in Scores.</p>
+        <div id="teamsList" class="card-list" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <!-- In-app article viewer overlay -->
+    <div id="articleOverlay" class="overlay" role="dialog" aria-modal="true" aria-labelledby="articleTitle" hidden>
+      <div class="overlay-content">
+        <div class="overlay-header">
+          <h2 id="articleTitle" class="overlay-title"></h2>
+        </div>
+        <div id="articleMeta" class="meta"></div>
+        <img id="articleImage" class="article-image" alt="" hidden />
+        <div id="articleBody" class="article-body"></div>
+      </div>
+    </div>
+
+    <footer class="app-footer" role="contentinfo">
+      <small>Demo app optimized for low-vision accessibility.</small>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+  </html>

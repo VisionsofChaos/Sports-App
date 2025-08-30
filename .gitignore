@@ -1,0 +1,12 @@
+# Ignore archives and OS cruft
+*.zip
+*.tar
+*.gz
+*.tgz
+.DS_Store
+Thumbs.db
+
+# Node artifacts (not used, but common)
+node_modules/
+dist/
+build/
