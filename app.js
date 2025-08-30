@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = '0.6.1';
+  const APP_VERSION = '0.6.2';
   // Public URL for sharing/QR when running locally
   const PUBLIC_APP_URL = 'https://visionsofchaos.github.io/Sports-App/';
   const state = {
@@ -615,7 +615,25 @@
           return;
         }
       }
-      // Fallback: if summary exists, show it
+      // Fallback 1: try public readability proxy on the web URL
+      if (item.url) {
+        try {
+          // Use Jina reader as CORS-friendly extractor
+          const target = item.url.startsWith('http') ? item.url : ('https://' + item.url.replace(/^\/+/, ''));
+          const proxied = 'https://r.jina.ai/http/' + target.replace(/^https?:\/\//, '');
+          const res = await fetch(proxied, { cache: 'no-store' });
+          if (res.ok) {
+            const text = await res.text();
+            if (text && text.trim()) {
+              // Very simple text->HTML: split on blank lines
+              const paras = text.trim().split(/\n\s*\n/).map(p => `<p>${p.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</p>`).join('');
+              el.articleBody.innerHTML = paras + `<p><a href="${target}" target="_blank" rel="noopener">Open original</a></p>`;
+              return;
+            }
+          }
+        } catch {}
+      }
+      // Fallback 2: if summary exists, show it
       el.articleBody.textContent = item.summary || 'Full story unavailable. Please try again later.';
     } catch (e) {
       el.articleBody.textContent = item.summary || 'Full story unavailable. Please try again later.';
