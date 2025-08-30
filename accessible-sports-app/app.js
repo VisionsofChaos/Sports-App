@@ -673,26 +673,15 @@
             console.log('Install choice', choice && choice.outcome);
           } catch {}
         } else {
-          const ua = navigator.userAgent || '';
-          const isFirefox = /Firefox\//.test(ua);
-          const isAndroid = /Android/.test(ua);
-          if (isFirefox) {
-            if (isAndroid) {
-              // Show QR section for quick install on phone
-              try {
-                const url = PUBLIC_APP_URL;
-                const img = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
-                if (el.qrImg) el.qrImg.src = img;
-                if (el.shareUrl) el.shareUrl.textContent = url;
-                if (el.qrSection) el.qrSection.hidden = false;
-                if (el.copyLink) el.copyLink.focus();
-              } catch {}
-            } else {
-              alert('Firefox desktop does not support installable PWAs. Use Chrome/Edge to install, or add a shortcut via your OS.');
-            }
-          } else {
-            alert('Installation tips:\n\n- iPhone/iPad (Safari): Share → Add to Home Screen\n- Android (Chrome/Edge): Menu ⋮ → Install app or Add to Home Screen\n- Desktop (Chrome/Edge): Address bar install icon or Menu → Install app');
-          }
+          // No prompt available: show QR so you can install on phone
+          try {
+            const url = PUBLIC_APP_URL;
+            const img = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(url)}`;
+            if (el.qrImg) el.qrImg.src = img;
+            if (el.shareUrl) el.shareUrl.textContent = url;
+            if (el.qrSection) el.qrSection.hidden = false;
+            if (el.copyLink) el.copyLink.focus();
+          } catch {}
         }
       });
     }

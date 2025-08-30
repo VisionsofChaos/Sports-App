@@ -80,7 +80,7 @@ body {
 }
 
 .brand { display: flex; align-items: center; gap: var(--space-2); }
-.brand-logo { height: 56px; width: auto; border-radius: 10px; box-shadow: 0 0 0 2px rgba(0,0,0,0.08); }
+.brand-logo { height: 112px; width: auto; border-radius: 10px; box-shadow: 0 0 0 2px rgba(0,0,0,0.08); }
 .brand h1 { font-size: 1.6rem; margin: 0; }
 .brand-icon { font-size: 1.8rem; }
 
@@ -132,6 +132,7 @@ body {
 .team-name { font-weight: 600; }
 .score { font-variant-numeric: tabular-nums; font-weight: 700; }
 .favorite-btn { margin-left: auto; }
+.favorite-btn { white-space: normal; }
 
 /* Big focus ring for keyboard users */
 :focus-visible {
