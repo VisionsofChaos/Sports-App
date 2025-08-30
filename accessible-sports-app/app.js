@@ -1,9 +1,9 @@
 (() => {
-  const APP_VERSION = '0.6.2';
+  const APP_VERSION = '0.6.3';
   const PUBLIC_APP_URL = 'https://visionsofchaos.github.io/Sports-App/';
   const state = {
     scale: parseFloat(localStorage.getItem('a11y_scale')) || 1.25,
-    theme: localStorage.getItem('a11y_theme') || 'light',
+    theme: localStorage.getItem('a11y_theme') || 'dark',
     readAloud: false,
     favorites: JSON.parse(localStorage.getItem('a11y_favorites') || '[]'),
     activeTab: 'scores',
@@ -251,6 +251,11 @@
     } catch (e) {
       console.error('Refresh failed', e);
       el.lastUpdated.textContent = `v${APP_VERSION} • Update failed. Check connection.`;
+      // gentle retry: try again shortly on initial failures
+      state.refreshRetries = (state.refreshRetries || 0) + 1;
+      if (state.refreshRetries <= 2) {
+        setTimeout(() => { refreshData().catch(() => {}); }, 2500);
+      }
     } finally {
       // ensure minimum delay for UX if needed
       const elapsed = Date.now() - started;
@@ -580,7 +585,10 @@
 
     el.lastUpdated.textContent = `v${APP_VERSION}`;
     setActiveTab('scores');
+    // kick off initial load and a follow-up to mitigate first-load network hiccups
+    state.refreshRetries = 0;
     refreshData();
+    setTimeout(() => { if (document.visibilityState === 'visible') refreshData().catch(() => {}); }, 3000);
 
     // No speech synthesis
 
