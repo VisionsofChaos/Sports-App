@@ -393,11 +393,12 @@
       const titleId = `head-${h.id}`;
       card.setAttribute('aria-labelledby', titleId);
       const imgHtml = h.image ? `<img class="thumb" src="${h.image}" alt="${(h.imageAlt || '').replace(/"/g,'&quot;')}" loading="lazy" decoding="async" />` : '';
+      const summaryHtml = sanitizeStoryHtml(h.summary || '');
       card.innerHTML = `
         ${imgHtml}
         <h3 id="${titleId}" class="headline-link" tabindex="0">${h.title}</h3>
         <div class="meta">${h.league}${h.byline ? ' • ' + h.byline : ''}</div>
-        <p>${h.summary || ''}</p>
+        <div>${summaryHtml}</div>
       `;
       const opener = (ev) => { ev.preventDefault(); openArticle(h, card); };
       card.addEventListener('click', opener);
@@ -446,11 +447,12 @@
       const titleId = `story-${h.id}`;
       card.setAttribute('aria-labelledby', titleId);
       const imgHtml = h.image ? `<img class="thumb" src="${h.image}" alt="${(h.imageAlt || '').replace(/"/g,'&quot;')}" loading="lazy" decoding="async" />` : '';
+      const summaryHtml = sanitizeStoryHtml(h.summary || '');
       card.innerHTML = `
         ${imgHtml}
         <h3 id="${titleId}" class="headline-link" tabindex="0">${h.title}</h3>
         <div class="meta">${h.league}${h.byline ? ' • ' + h.byline : ''}</div>
-        <p>${h.summary || ''}</p>
+        <div>${summaryHtml}</div>
       `;
       const opener = (ev) => { ev.preventDefault(); openArticle(h, card); };
       card.addEventListener('click', opener);
@@ -758,8 +760,13 @@
           if (res.ok) {
             const text = await res.text();
             if (text && text.trim()) {
-              const paras = text.trim().split(/\n\s*\n/).map(p => `<p>${p.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</p>`).join('');
-              el.articleBody.innerHTML = paras + `<p><a href="${target}" target="_blank" rel="noopener">Open original</a></p>`;
+              const hasMarkup = /<\s*(a|p|ul|ol|li|br|h2|h3|h4|blockquote|img)\b/i.test(text);
+              if (hasMarkup) {
+                el.articleBody.innerHTML = sanitizeStoryHtml(text) + `<p><a href="${target}" target="_blank" rel="noopener">Open original</a></p>`;
+              } else {
+                const paras = text.trim().split(/\n\s*\n/).map(p => `<p>${p.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</p>`).join('');
+                el.articleBody.innerHTML = paras + `<p><a href="${target}" target="_blank" rel="noopener">Open original</a></p>`;
+              }
               return;
             }
           }
