@@ -1,5 +1,7 @@
 (() => {
-  const APP_VERSION = '0.6.0';
+  const APP_VERSION = '0.6.1';
+  // Public URL for sharing/QR when running locally
+  const PUBLIC_APP_URL = 'https://visionsofchaos.github.io/Sports-App/';
   const state = {
     scale: parseFloat(localStorage.getItem('a11y_scale')) || 1.25,
     theme: localStorage.getItem('a11y_theme') || 'light',
@@ -541,7 +543,8 @@
     if (el.shareMobile) {
       el.shareMobile.addEventListener('click', () => {
         try {
-          const url = location.href;
+          const isLocal = ['localhost', '127.0.0.1', '::1'].includes(location.hostname);
+          const url = isLocal ? PUBLIC_APP_URL : location.href;
           if (el.qrImg) {
             const encoded = encodeURIComponent(url);
             // Public QR service; image loads on demand
@@ -556,7 +559,9 @@
     if (el.copyLink) {
       el.copyLink.addEventListener('click', async () => {
         try {
-          await navigator.clipboard.writeText(location.href);
+          const isLocal = ['localhost', '127.0.0.1', '::1'].includes(location.hostname);
+          const url = isLocal ? PUBLIC_APP_URL : location.href;
+          await navigator.clipboard.writeText(url);
           el.copyLink.textContent = 'Copied!';
           setTimeout(() => (el.copyLink.textContent = 'Copy Link'), 1200);
         } catch {}
