@@ -203,6 +203,8 @@
         for (const a of arts) {
           const web = (a.links && a.links.web && a.links.web.href) || a.link || '';
           const api = (a.links && a.links.api && (a.links.api.news && a.links.api.news.href) || a.links.api && a.links.api.self && a.links.api.self.href) || '';
+          const isVideo = String(a.type || '').toLowerCase().includes('video') ||
+            (Array.isArray(a.categories) && a.categories.some(c => String((c && (c.type || c)).toLowerCase()).includes('video')));
           items.push({
             id: (a.guid || a.id || ((a.headline || '') + (a.published || ''))),
             title: a.headline || 'Headline',
@@ -211,6 +213,7 @@
             published: a.published || '',
             url: web,
             apiUrl: api,
+            kind: isVideo ? 'video' : 'article',
             story: a.story || '',
             image: (a.images && a.images[0] && (a.images[0].url || a.images[0].href)) || '',
             imageAlt: (a.images && a.images[0] && (a.images[0].name || a.images[0].caption)) || '',
@@ -394,9 +397,10 @@
       card.setAttribute('aria-labelledby', titleId);
       const imgHtml = h.image ? `<img class="thumb" src="${h.image}" alt="${(h.imageAlt || '').replace(/"/g,'&quot;')}" loading="lazy" decoding="async" />` : '';
       const summaryHtml = sanitizeStoryHtml(h.summary || '');
+      const badge = h.kind === 'video' ? `<span class="badge">▶ Video</span>` : '';
       card.innerHTML = `
         ${imgHtml}
-        <h3 id="${titleId}" class="headline-link" tabindex="0">${h.title}</h3>
+        <h3 id="${titleId}" class="headline-link" tabindex="0">${h.title} ${badge}</h3>
         <div class="meta">${h.league}${h.byline ? ' • ' + h.byline : ''}</div>
         <div>${summaryHtml}</div>
       `;
@@ -736,6 +740,14 @@
       document.body.style.top = `-${scrollYBeforeOpen}px`;
       document.body.style.width = '100%';
     } catch {}
+
+    // If this headline is a video, show a Play button linking to ESPN
+    if (item.kind === 'video') {
+      const img = item.image ? `<img src="${item.image}" alt="${(item.imageAlt||'').replace(/"/g,'&quot;')}" class="article-image">` : '';
+      const btn = `<p><a class="btn" href="${item.url}" target="_blank" rel="noopener">▶ Play video</a></p>`;
+      el.articleBody.innerHTML = img + btn + (item.summary ? `<p>${sanitizeStoryHtml(item.summary)}</p>` : '');
+      return;
+    }
 
     // Try to load full article body from API if available
     try {
