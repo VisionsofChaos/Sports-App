@@ -153,7 +153,10 @@ body {
   background: color-mix(in oklab, var(--bg) 80%, transparent);
   backdrop-filter: blur(4px);
   display: grid;
-  place-items: center;
+  justify-content: center;
+  align-items: start;
+  padding: var(--space-4) 0;
+  overscroll-behavior: none;
   z-index: 100;
 }
 .overlay-content {
@@ -165,8 +168,11 @@ body {
   border-radius: var(--radius);
   padding: var(--space-3);
   overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
 }
 .overlay-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); position: sticky; top: 0; background: var(--bg); padding-bottom: 6px; }
 .overlay-title { margin: 0; font-size: 1.4rem; }
-.article-image { width: 100%; height: auto; border-radius: calc(var(--radius) - 4px); margin: 8px 0; }
+.article-image { width: 100%; height: auto; border-radius: calc(var(--radius) - 4px); margin: 8px 0; aspect-ratio: 16 / 9; object-fit: cover; }
 .article-body { font-size: 1.1rem; }

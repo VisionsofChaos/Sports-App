@@ -586,6 +586,8 @@
     if (item.image) {
       el.articleImage.src = item.image;
       el.articleImage.alt = item.imageAlt || '';
+      el.articleImage.loading = 'lazy';
+      el.articleImage.decoding = 'async';
       el.articleImage.hidden = false;
     } else {
       el.articleImage.hidden = true;
@@ -593,6 +595,13 @@
     el.articleBody.textContent = 'Loading…';
     el.overlay.hidden = false;
     el.closeArticle.focus();
+
+    // Lock background scroll while overlay is open
+    try {
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+    } catch {}
 
     // Try to load full article body from API if available
     try {
@@ -613,6 +622,12 @@
   function closeArticle() {
     el.overlay.hidden = true;
     if (lastFocus && lastFocus.focus) lastFocus.focus();
+    // Restore background scroll
+    try {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    } catch {}
   }
   el.closeArticle.addEventListener('click', closeArticle);
   el.overlay.addEventListener('click', (e) => { if (e.target === el.overlay) closeArticle(); });
