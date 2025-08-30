@@ -37,12 +37,6 @@
     refresh: document.getElementById('refreshData'),
     updateApp: document.getElementById('updateApp'),
     installApp: document.getElementById('installApp'),
-    shareMobile: document.getElementById('shareMobile'),
-    qrSection: document.getElementById('qrSection'),
-    qrImg: document.getElementById('qrImg'),
-    shareUrl: document.getElementById('shareUrl'),
-    copyLink: document.getElementById('copyLink'),
-    closeQR: document.getElementById('closeQR'),
     lastUpdated: document.getElementById('lastUpdated'),
     overlay: document.getElementById('articleOverlay'),
     articleTitle: document.getElementById('articleTitle'),
@@ -596,6 +590,11 @@
     if (el.overlay) el.overlay.hidden = true;
 
     el.lastUpdated.textContent = `v${APP_VERSION}`;
+    // If already installed/standalone, keep install button hidden
+    try {
+      const isStandalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
+      if (isStandalone && el.installApp) el.installApp.hidden = true;
+    } catch {}
     setActiveTab('scores');
     // kick off initial load and a follow-up to mitigate first-load network hiccups
     state.refreshRetries = 0;
@@ -677,37 +676,6 @@
           alert('Installation tips:\n\n- iPhone/iPad (Safari): Share → Add to Home Screen\n- Android (Chrome): Menu ⋮ → Install app or Add to Home Screen\n- Desktop (Chrome/Edge): Address bar install icon or Menu → Install app');
         }
       });
-    }
-
-    // QR / share to mobile
-    if (el.shareMobile) {
-      el.shareMobile.addEventListener('click', () => {
-        try {
-          const isLocal = ['localhost', '127.0.0.1', '::1'].includes(location.hostname);
-          const url = isLocal ? PUBLIC_APP_URL : location.href;
-          if (el.qrImg) {
-            const encoded = encodeURIComponent(url);
-            el.qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encoded}`;
-          }
-          if (el.shareUrl) el.shareUrl.textContent = url;
-          if (el.qrSection) el.qrSection.hidden = false;
-          if (el.copyLink) el.copyLink.focus();
-        } catch {}
-      });
-    }
-    if (el.copyLink) {
-      el.copyLink.addEventListener('click', async () => {
-        try {
-          const isLocal = ['localhost', '127.0.0.1', '::1'].includes(location.hostname);
-          const url = isLocal ? PUBLIC_APP_URL : location.href;
-          await navigator.clipboard.writeText(url);
-          el.copyLink.textContent = 'Copied!';
-          setTimeout(() => (el.copyLink.textContent = 'Copy Link'), 1200);
-        } catch {}
-      });
-    }
-    if (el.closeQR) {
-      el.closeQR.addEventListener('click', () => { if (el.qrSection) el.qrSection.hidden = true; });
     }
   }
 
