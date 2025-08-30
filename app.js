@@ -10,6 +10,7 @@
     data: { scores: [], headlines: [], teams: [] },
     lastUpdated: null,
     timer: null,
+    deferredInstall: null,
   };
 
   const ENDPOINTS = {
@@ -34,6 +35,13 @@
     themeSelect: document.getElementById('themeSelect'),
     refresh: document.getElementById('refreshData'),
     updateApp: document.getElementById('updateApp'),
+    installApp: document.getElementById('installApp'),
+    shareMobile: document.getElementById('shareMobile'),
+    qrSection: document.getElementById('qrSection'),
+    qrImg: document.getElementById('qrImg'),
+    shareUrl: document.getElementById('shareUrl'),
+    copyLink: document.getElementById('copyLink'),
+    closeQR: document.getElementById('closeQR'),
     lastUpdated: document.getElementById('lastUpdated'),
     overlay: document.getElementById('articleOverlay'),
     closeArticle: document.getElementById('closeArticle'),
@@ -499,6 +507,63 @@
     // Register service worker for installable mobile app
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js').catch(() => {});
+    }
+
+    // PWA install handling
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      state.deferredInstall = e;
+      if (el.installApp) el.installApp.hidden = false;
+    });
+    window.addEventListener('appinstalled', () => {
+      if (el.installApp) el.installApp.hidden = true;
+      state.deferredInstall = null;
+    });
+    if (el.installApp) {
+      el.installApp.addEventListener('click', async () => {
+        if (state.deferredInstall) {
+          try {
+            state.deferredInstall.prompt();
+            const choice = await state.deferredInstall.userChoice;
+            state.deferredInstall = null;
+            el.installApp.hidden = true;
+            console.log('Install choice', choice && choice.outcome);
+          } catch (err) {
+            console.warn('Install prompt failed', err);
+          }
+        } else {
+          alert('Installation tips:\n\n- iPhone/iPad (Safari): Share → Add to Home Screen\n- Android (Chrome): Menu ⋮ → Install app or Add to Home Screen\n- Desktop (Chrome/Edge): Address bar install icon or Menu → Install app');
+        }
+      });
+    }
+
+    // QR / share to mobile
+    if (el.shareMobile) {
+      el.shareMobile.addEventListener('click', () => {
+        try {
+          const url = location.href;
+          if (el.qrImg) {
+            const encoded = encodeURIComponent(url);
+            // Public QR service; image loads on demand
+            el.qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encoded}`;
+          }
+          if (el.shareUrl) el.shareUrl.textContent = url;
+          if (el.qrSection) el.qrSection.hidden = false;
+          if (el.copyLink) el.copyLink.focus();
+        } catch {}
+      });
+    }
+    if (el.copyLink) {
+      el.copyLink.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(location.href);
+          el.copyLink.textContent = 'Copied!';
+          setTimeout(() => (el.copyLink.textContent = 'Copy Link'), 1200);
+        } catch {}
+      });
+    }
+    if (el.closeQR) {
+      el.closeQR.addEventListener('click', () => { if (el.qrSection) el.qrSection.hidden = true; });
     }
   }
 
