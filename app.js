@@ -575,6 +575,7 @@
   document.addEventListener('DOMContentLoaded', init);
   // In-app article viewer
   let lastFocus = null;
+  let scrollYBeforeOpen = 0;
   async function openArticle(item, sourceEl) {
     lastFocus = sourceEl || null;
     el.articleTitle.textContent = item.title || 'Story';
@@ -596,11 +597,12 @@
     el.overlay.hidden = false;
     el.closeArticle.focus();
 
-    // Lock background scroll while overlay is open
+    // Robust scroll lock (works on iOS Safari): fix body in place
     try {
-      document.documentElement.style.overflow = 'hidden';
-      document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
+      scrollYBeforeOpen = window.scrollY || window.pageYOffset || 0;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollYBeforeOpen}px`;
+      document.body.style.width = '100%';
     } catch {}
 
     // Try to load full article body from API if available
@@ -622,15 +624,26 @@
   function closeArticle() {
     el.overlay.hidden = true;
     if (lastFocus && lastFocus.focus) lastFocus.focus();
-    // Restore background scroll
+    // Restore scroll position and body styles
     try {
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      if (typeof scrollYBeforeOpen === 'number') {
+        window.scrollTo(0, scrollYBeforeOpen);
+      }
     } catch {}
   }
   el.closeArticle.addEventListener('click', closeArticle);
   el.overlay.addEventListener('click', (e) => { if (e.target === el.overlay) closeArticle(); });
+  // Prevent background from being dragged when touching overlay backdrop
+  try {
+    el.overlay.addEventListener('touchmove', (e) => {
+      if (e.target === el.overlay) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+  } catch {}
   document.addEventListener('keydown', (e) => { if (!el.overlay.hidden && e.key === 'Escape') closeArticle(); });
 
   // Update App: unregister SW, clear caches, reload

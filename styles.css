@@ -157,11 +157,14 @@ body {
   align-items: start;
   padding: var(--space-4) 0;
   overscroll-behavior: none;
+  touch-action: none; /* prevent background panning */
+  overflow: hidden;   /* only inner content scrolls */
   z-index: 100;
 }
 .overlay-content {
   width: min(960px, 92vw);
-  max-height: 90vh;
+  max-height: 90vh; /* fallback */
+  max-height: 90dvh; /* reduce address bar jump on mobile */
   background: var(--bg);
   color: var(--text);
   border: 2px solid var(--border);
