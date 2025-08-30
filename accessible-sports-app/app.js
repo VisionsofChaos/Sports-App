@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = '0.6.3';
+  const APP_VERSION = '0.6.5';
   const PUBLIC_APP_URL = 'https://visionsofchaos.github.io/Sports-App/';
   const state = {
     scale: parseFloat(localStorage.getItem('a11y_scale')) || 1.25,
@@ -647,6 +647,10 @@
       navigator.serviceWorker.ready.then(() => {
         if (document.visibilityState === 'visible') refreshData().catch(() => {});
       }).catch(() => {});
+      // If a new SW takes control, reload to get fresh assets
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        try { location.reload(); } catch {}
+      });
     }
 
     // PWA install handling
