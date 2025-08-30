@@ -84,9 +84,15 @@
   // Read-aloud removed
 
   async function fetchJSON(url) {
-    const res = await fetch(url, { mode: 'cors', cache: 'no-store' });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return res.json();
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+    try {
+      const res = await fetch(url, { mode: 'cors', cache: 'no-store', signal: controller.signal });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json();
+    } finally {
+      clearTimeout(timeout);
+    }
   }
 
   function parseScoreboardLeagueTag(tag) {
@@ -588,7 +594,10 @@
     // kick off initial load and a follow-up to mitigate first-load network hiccups
     state.refreshRetries = 0;
     refreshData();
-    setTimeout(() => { if (document.visibilityState === 'visible') refreshData().catch(() => {}); }, 3000);
+    setTimeout(() => { if (document.visibilityState === 'visible') refreshData().catch(() => {}); }, 2000);
+    window.addEventListener('load', () => {
+      if (document.visibilityState === 'visible') refreshData().catch(() => {});
+    });
 
     // No speech synthesis
 
@@ -628,6 +637,10 @@
     // Register service worker for installable mobile app
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js').catch(() => {});
+      // Refresh again once SW is ready to avoid first-load races
+      navigator.serviceWorker.ready.then(() => {
+        if (document.visibilityState === 'visible') refreshData().catch(() => {});
+      }).catch(() => {});
     }
 
     // PWA install handling
