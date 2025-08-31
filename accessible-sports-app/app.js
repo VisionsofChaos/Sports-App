@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = '0.6.8';
+  const APP_VERSION = '0.6.9';
   const PUBLIC_APP_URL = 'https://visionsofchaos.github.io/Sports-App/';
   const state = {
     scale: parseFloat(localStorage.getItem('a11y_scale')) || 1.25,
@@ -240,12 +240,11 @@
       state.lastUpdated = new Date();
       el.lastUpdated.textContent = `v${APP_VERSION} • Updated ${state.lastUpdated.toLocaleTimeString()}`;
       // Mark all views dirty and render all tabs so content is present immediately
-      state.dirty = { scores: true, headlines: true, stories: true, teams: true };
+      state.dirty = { scores: true, headlines: true, teams: true };
       renderScores();
       renderHeadlines();
-      renderStories();
       renderTeams();
-      state.dirty = { scores: false, headlines: false, stories: false, teams: false };
+      state.dirty = { scores: false, headlines: false, teams: false };
       localStorage.setItem('a11y_data_backup', JSON.stringify({ ts: Date.now(), data: state.data }));
     } catch (e) {
       console.error('Refresh failed', e);
@@ -361,11 +360,7 @@
     renderScores();
     state.dirty.scores = false;
   }
-  function renderStoriesIfDirty() {
-    if (!state.dirty.stories) return;
-    renderStories();
-    state.dirty.stories = false;
-  }
+  // stories merged into headlines; no-op
   function renderTeamsIfDirty() {
     if (!state.dirty.teams) return;
     renderTeams();
@@ -416,7 +411,7 @@
           const titleId = `fav-${h.id}`;
           card.setAttribute('aria-labelledby', titleId);
           const imgHtml = h.image ? `<img class="thumb" src="${h.image}" alt="${(h.imageAlt || '').replace(/\"/g,'&quot;')}" loading="lazy" decoding="async" />` : '';
-          const summaryHtml = sanitizeStoryHtml(h.summary || '');
+          const summaryHtml = sanitizeStoryHtml(decodeHtmlEntities(h.summary || ''));
           card.innerHTML = `
             ${imgHtml}
             <h3 id="${titleId}" class="headline-link" tabindex="0">${h.title}</h3>
@@ -442,7 +437,7 @@
       const titleId = `head-${h.id}`;
       card.setAttribute('aria-labelledby', titleId);
       const imgHtml = h.image ? `<img class="thumb" src="${h.image}" alt="${(h.imageAlt || '').replace(/"/g,'&quot;')}" loading="lazy" decoding="async" />` : '';
-      const summaryHtml = sanitizeStoryHtml(h.summary || '');
+          const summaryHtml = sanitizeStoryHtml(decodeHtmlEntities(h.summary || ''));
       card.innerHTML = `
         ${imgHtml}
         <h3 id="${titleId}" class="headline-link" tabindex="0">${h.title}</h3>
@@ -472,7 +467,7 @@
     return Array.from(names);
   }
 
-  function renderStories() {
+  /* function renderStories() {
     const list = el.lists.stories;
     list.innerHTML = '';
     const keys = buildFavoriteKeywords();
@@ -496,7 +491,7 @@
       const titleId = `story-${h.id}`;
       card.setAttribute('aria-labelledby', titleId);
       const imgHtml = h.image ? `<img class="thumb" src="${h.image}" alt="${(h.imageAlt || '').replace(/"/g,'&quot;')}" loading="lazy" decoding="async" />` : '';
-      const summaryHtml = sanitizeStoryHtml(h.summary || '');
+      const summaryHtml = sanitizeStoryHtml(decodeHtmlEntities(h.summary || ''));
       card.innerHTML = `
         ${imgHtml}
         <h3 id="${titleId}" class="headline-link" tabindex="0">${h.title}</h3>
@@ -512,7 +507,7 @@
       if (img) img.addEventListener('click', opener);
       list.appendChild(card);
     }
-  }
+  } */
 
   function renderTeams() {
     const list = el.lists.teams;
@@ -573,7 +568,7 @@
     // Mark the dependent views dirty and render only the active tab
     state.dirty.scores = true;
     state.dirty.teams = true;
-    state.dirty.stories = true;
+    // stories merged into headlines
     renderActiveTab();
   }
 
@@ -687,9 +682,8 @@
         // Render all tabs from backup so nothing looks empty on first paint
         renderScores();
         renderHeadlines();
-        renderStories();
         renderTeams();
-        state.dirty = { scores: false, headlines: false, stories: false, teams: false };
+        state.dirty = { scores: false, headlines: false, teams: false };
       }
     } catch {}
 
