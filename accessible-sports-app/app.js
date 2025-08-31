@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = '0.6.6';
+  const APP_VERSION = '0.6.7';
   const PUBLIC_APP_URL = 'https://visionsofchaos.github.io/Sports-App/';
   const state = {
     scale: parseFloat(localStorage.getItem('a11y_scale')) || 1.25,
@@ -643,8 +643,12 @@
       const backup = JSON.parse(localStorage.getItem('a11y_data_backup') || 'null');
       if (backup) {
         state.data = backup.data || state.data;
-        state.dirty = { scores: true, headlines: true, stories: true, teams: true };
-        renderActiveTab();
+        // Render all tabs from backup so nothing looks empty on first paint
+        renderScores();
+        renderHeadlines();
+        renderStories();
+        renderTeams();
+        state.dirty = { scores: false, headlines: false, stories: false, teams: false };
       }
     } catch {}
 
@@ -683,23 +687,15 @@
             console.log('Install choice', choice && choice.outcome);
           } catch {}
         } else {
-          // No prompt available
-          const ua = navigator.userAgent || '';
-          const isAndroid = /Android/.test(ua);
-          const isChrome = /Chrome\//.test(ua) && !/Edg\//.test(ua) && !/OPR\//.test(ua);
-          if (isAndroid && isChrome) {
-            alert('On Chrome for Android: tap the menu ⋮ → Install app');
-          } else {
-            // Desktop or other browsers: show QR to open/install on phone
-            try {
-              const url = PUBLIC_APP_URL;
-              const img = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(url)}`;
-              if (el.qrImg) el.qrImg.src = img;
-              if (el.shareUrl) el.shareUrl.textContent = url;
-              if (el.qrSection) el.qrSection.hidden = false;
-              if (el.copyLink) el.copyLink.focus();
-            } catch {}
-          }
+          // No prompt available: show QR so you can install on phone, regardless of browser
+          try {
+            const url = PUBLIC_APP_URL;
+            const img = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(url)}`;
+            if (el.qrImg) el.qrImg.src = img;
+            if (el.shareUrl) el.shareUrl.textContent = url;
+            if (el.qrSection) el.qrSection.hidden = false;
+            if (el.copyLink) el.copyLink.focus();
+          } catch {}
         }
       });
     }
@@ -790,10 +786,18 @@
           }
         } catch {}
       }
-      // Fallback 2: if summary exists, show it
-      el.articleBody.textContent = item.summary || 'Full story unavailable. Please try again later.';
+      // Fallback 2: if summary exists, render sanitized HTML so links are clickable
+      if (item.summary) {
+        el.articleBody.innerHTML = filterArticleHtml(sanitizeStoryHtml(item.summary));
+      } else {
+        el.articleBody.textContent = 'Full story unavailable. Please try again later.';
+      }
     } catch (e) {
-      el.articleBody.textContent = item.summary || 'Full story unavailable. Please try again later.';
+      if (item.summary) {
+        el.articleBody.innerHTML = filterArticleHtml(sanitizeStoryHtml(item.summary));
+      } else {
+        el.articleBody.textContent = 'Full story unavailable. Please try again later.';
+      }
     }
   }
   function closeArticle() {

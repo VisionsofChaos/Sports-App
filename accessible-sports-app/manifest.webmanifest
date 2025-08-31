@@ -1,6 +1,6 @@
 {
-  "name": "Accessible Sports",
-  "short_name": "Sports A11y",
+  "name": "Sports App",
+  "short_name": "Sports App",
   "start_url": "/Sports-App/",
   "scope": "/Sports-App/",
   "display": "standalone",
