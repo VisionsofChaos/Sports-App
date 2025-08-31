@@ -1,5 +1,5 @@
-const CACHE_NAME = 'a11y-sports-shell-v9';
-const RUNTIME = 'a11y-sports-runtime-v9';
+const CACHE_NAME = 'a11y-sports-shell-v10';
+const RUNTIME = 'a11y-sports-runtime-v10';
 const APP_SHELL = [
   './',
   './index.html',

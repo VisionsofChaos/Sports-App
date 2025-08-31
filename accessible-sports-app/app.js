@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = '0.6.9';
+  const APP_VERSION = '0.6.10';
   const PUBLIC_APP_URL = 'https://visionsofchaos.github.io/Sports-App/';
   const state = {
     scale: parseFloat(localStorage.getItem('a11y_scale')) || 1.25,
@@ -699,6 +699,18 @@
         try { location.reload(); } catch {}
       });
     }
+
+    // As a last resort, auto-reload once on first open to avoid empty state
+    setTimeout(() => {
+      try {
+        const hasData = (state.data.scores && state.data.scores.length) || (state.data.headlines && state.data.headlines.length);
+        if (!hasData && !sessionStorage.getItem('boot_refreshed')) {
+          sessionStorage.setItem('boot_refreshed', '1');
+          const base = location.origin + location.pathname + (location.search ? location.search + '&' : '?') + 'fresh=' + Date.now();
+          location.replace(base);
+        }
+      } catch {}
+    }, 1200);
 
     // PWA install handling
     window.addEventListener('beforeinstallprompt', (e) => {

@@ -10,3 +10,7 @@ Thumbs.db
 node_modules/
 dist/
 build/
+
+# Ignore unrelated heavy folders in this workspace
+Briar/
+dm-toolkit/
