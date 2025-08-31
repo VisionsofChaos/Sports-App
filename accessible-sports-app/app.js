@@ -763,7 +763,8 @@
           const proxied = 'https://r.jina.ai/http/' + target.replace(/^https?:\/\//, '');
           const res = await fetch(proxied, { cache: 'no-store' });
           if (res.ok) {
-            const text = await res.text();
+            let text = await res.text();
+            if (/[&]lt;/.test(text) && /[&]gt;/.test(text)) text = decodeHtmlEntities(text);
             if (text && text.trim()) {
               const hasMarkup = /<\s*(a|p|ul|ol|li|br|h2|h3|h4|blockquote|img)\b/i.test(text);
               if (hasMarkup) {
@@ -800,6 +801,30 @@
     el.overlay.addEventListener('touchmove', (e) => {
       if (e.target === el.overlay) e.preventDefault();
     }, { passive: false });
+  } catch {}
+  // Swipe-to-close (horizontal) on overlay content
+  try {
+    let startX = 0, startY = 0, swiping = false;
+    const thresh = 60;
+    const content = document.querySelector('.overlay-content');
+    if (content) {
+      content.addEventListener('touchstart', (e) => {
+        if (!e.touches || e.touches.length !== 1) return;
+        const t = e.touches[0];
+        startX = t.clientX; startY = t.clientY; swiping = true;
+      }, { passive: true });
+      content.addEventListener('touchmove', (e) => {
+        if (!swiping) return;
+        const t = e.touches[0];
+        const dx = t.clientX - startX; const dy = t.clientY - startY;
+        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > thresh) {
+          swiping = false;
+          closeArticle();
+        }
+      }, { passive: true });
+      content.addEventListener('touchend', () => { swiping = false; }, { passive: true });
+      content.addEventListener('touchcancel', () => { swiping = false; }, { passive: true });
+    }
   } catch {}
   document.addEventListener('keydown', (e) => { if (!el.overlay.hidden && e.key === 'Escape') closeArticle(); });
 
@@ -855,6 +880,16 @@
     return tmpl.innerHTML;
   }
 
+  function decodeHtmlEntities(input) {
+    try {
+      const txt = document.createElement('textarea');
+      txt.innerHTML = String(input || '');
+      return txt.value;
+    } catch {
+      return String(input || '');
+    }
+  }
+
   function filterArticleHtml(html) {
     try {
       const tmpl = document.createElement('template');
@@ -885,7 +920,10 @@
   }
 
   function formatStoryHtml(input) {
-    const html = String(input || '');
+    let html = String(input || '');
+    if (/[&]lt;/.test(html) && /[&]gt;/.test(html)) {
+      html = decodeHtmlEntities(html);
+    }
     const hasBlocks = /<(p|ul|ol|li|br|h2|h3|h4|blockquote|img)\b/i.test(html);
     if (hasBlocks) return filterArticleHtml(sanitizeStoryHtml(html));
     // Convert plain text with newlines into paragraphs and line breaks
