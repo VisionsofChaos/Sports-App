@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = '0.6.5';
+  const APP_VERSION = '0.6.6';
   const PUBLIC_APP_URL = 'https://visionsofchaos.github.io/Sports-App/';
   const state = {
     scale: parseFloat(localStorage.getItem('a11y_scale')) || 1.25,
