@@ -191,6 +191,10 @@ body {
   touch-action: pan-y;
 }
 .overlay-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); padding-bottom: 6px; }
+.back-btn { display: none; }
+@media (max-width: 720px) {
+  .back-btn { display: inline-block; }
+}
 .overlay-title { margin: 0; font-size: 1.4rem; }
 .article-image { width: 100%; height: auto; border-radius: calc(var(--radius) - 4px); margin: 8px 0; aspect-ratio: 16 / 9; object-fit: cover; }
 .article-body { font-size: 1.1rem; line-height: 1.6; }

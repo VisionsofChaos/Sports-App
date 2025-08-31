@@ -39,6 +39,7 @@
     installApp: document.getElementById('installApp'),
     lastUpdated: document.getElementById('lastUpdated'),
     overlay: document.getElementById('articleOverlay'),
+    backArticle: document.getElementById('backArticle'),
     articleTitle: document.getElementById('articleTitle'),
     articleMeta: document.getElementById('articleMeta'),
     articleImage: document.getElementById('articleImage'),
@@ -797,6 +798,7 @@
     } catch {}
   }
   el.overlay.addEventListener('click', (e) => { if (e.target === el.overlay) closeArticle(); });
+  if (el.backArticle) el.backArticle.addEventListener('click', closeArticle);
   try {
     el.overlay.addEventListener('touchmove', (e) => {
       if (e.target === el.overlay) e.preventDefault();
