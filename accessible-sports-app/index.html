@@ -38,7 +38,6 @@
     <nav class="tabs" role="tablist" aria-label="Primary">
       <button role="tab" id="tab-scores" aria-controls="panel-scores" aria-selected="true" class="tab">Scores</button>
       <button role="tab" id="tab-headlines" aria-controls="panel-headlines" aria-selected="false" class="tab">Headlines</button>
-      <button role="tab" id="tab-stories" aria-controls="panel-stories" aria-selected="false" class="tab">Team Stories</button>
       <button role="tab" id="tab-myteams" aria-controls="panel-myteams" aria-selected="false" class="tab">My Teams</button>
     </nav>
 
@@ -49,14 +48,8 @@
       </section>
 
       <section id="panel-headlines" role="tabpanel" aria-labelledby="tab-headlines" hidden>
-        <h2 class="section-title">Top Headlines</h2>
+        <h2 class="section-title">Headlines</h2>
         <div id="headlinesList" class="card-list" aria-live="polite"></div>
-      </section>
-
-      <section id="panel-stories" role="tabpanel" aria-labelledby="tab-stories" hidden>
-        <h2 class="section-title">Stories for My Teams</h2>
-        <p class="hint">Based on your favorites. Prefilled with Tampa Bay teams.</p>
-        <div id="storiesList" class="card-list" aria-live="polite"></div>
       </section>
 
       <section id="panel-myteams" role="tabpanel" aria-labelledby="tab-myteams" hidden>

@@ -47,19 +47,16 @@
     tabs: {
       scores: document.getElementById('tab-scores'),
       headlines: document.getElementById('tab-headlines'),
-      stories: document.getElementById('tab-stories'),
       myteams: document.getElementById('tab-myteams'),
     },
     panels: {
       scores: document.getElementById('panel-scores'),
       headlines: document.getElementById('panel-headlines'),
-      stories: document.getElementById('panel-stories'),
       myteams: document.getElementById('panel-myteams'),
     },
     lists: {
       scores: document.getElementById('scoresList'),
       headlines: document.getElementById('headlinesList'),
-      stories: document.getElementById('storiesList'),
       teams: document.getElementById('teamsList'),
     }
   };
@@ -382,9 +379,6 @@
       case 'headlines':
         renderHeadlinesIfDirty();
         break;
-      case 'stories':
-        renderStoriesIfDirty();
-        break;
       case 'myteams':
         renderTeamsIfDirty();
         break;
@@ -394,6 +388,54 @@
   function renderHeadlines() {
     const list = el.lists.headlines;
     list.innerHTML = '';
+    // Favorite Team Stories section at top
+    try {
+      const keys = buildFavoriteKeywords();
+      const lowerKeys = keys.map(k => k.toLowerCase());
+      const favItems = state.data.headlines.filter(h => {
+        const text = `${h.title} ${h.summary}`.toLowerCase();
+        return lowerKeys.length && lowerKeys.some(k => text.includes(k));
+      });
+      const favSection = document.createElement('section');
+      favSection.className = 'sport-section';
+      const favHeading = document.createElement('h3');
+      favHeading.className = 'sport-heading';
+      favHeading.textContent = 'Favorite Team Stories';
+      favSection.appendChild(favHeading);
+      const favList = document.createElement('div');
+      favList.className = 'card-list';
+      if (favItems.length === 0) {
+        const hint = document.createElement('div');
+        hint.className = 'hint';
+        hint.textContent = 'No Favorited Team Stories';
+        favList.appendChild(hint);
+      } else {
+        for (const h of favItems) {
+          const card = document.createElement('article');
+          card.className = 'card clickable';
+          const titleId = `fav-${h.id}`;
+          card.setAttribute('aria-labelledby', titleId);
+          const imgHtml = h.image ? `<img class="thumb" src="${h.image}" alt="${(h.imageAlt || '').replace(/\"/g,'&quot;')}" loading="lazy" decoding="async" />` : '';
+          const summaryHtml = sanitizeStoryHtml(h.summary || '');
+          card.innerHTML = `
+            ${imgHtml}
+            <h3 id="${titleId}" class="headline-link" tabindex="0">${h.title}</h3>
+            <div class="meta">${h.league}${h.byline ? ' • ' + h.byline : ''}</div>
+            <div>${summaryHtml}</div>
+          `;
+          const opener = (ev) => { ev.preventDefault(); openArticle(h, card); };
+          card.addEventListener('click', opener);
+          const headEl = card.querySelector('.headline-link');
+          headEl.addEventListener('click', opener);
+          headEl.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') opener(e); });
+          const img = card.querySelector('.thumb');
+          if (img) img.addEventListener('click', opener);
+          favList.appendChild(card);
+        }
+      }
+      favSection.appendChild(favList);
+      list.appendChild(favSection);
+    } catch {}
     for (const h of state.data.headlines) {
       const card = document.createElement('article');
       card.className = 'card clickable';
@@ -566,7 +608,6 @@
 
   el.tabs.scores.addEventListener('click', () => setActiveTab('scores'));
   el.tabs.headlines.addEventListener('click', () => setActiveTab('headlines'));
-  el.tabs.stories.addEventListener('click', () => setActiveTab('stories'));
   el.tabs.myteams.addEventListener('click', () => setActiveTab('myteams'));
 
   // Keyboard navigation for tabs
