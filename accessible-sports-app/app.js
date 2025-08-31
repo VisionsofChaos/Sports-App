@@ -189,8 +189,10 @@
         for (const a of arts) {
           const web = (a.links && a.links.web && a.links.web.href) || a.link || '';
           const api = (a.links && a.links.api && (a.links.api.news && a.links.api.news.href) || a.links.api && a.links.api.self && a.links.api.self.href) || '';
+          const lw = String(web || '').toLowerCase();
           const isVideo = String(a.type || '').toLowerCase().includes('video') ||
-            (Array.isArray(a.categories) && a.categories.some(c => String((c && (c.type || c)).toLowerCase()).includes('video')));
+            (Array.isArray(a.categories) && a.categories.some(c => String((c && (c.type || c)).toLowerCase()).includes('video'))) ||
+            /\bvideo\b/.test(lw) || /\/video\//.test(lw) || /watch/.test(lw) || /highlights?/.test(String(a.headline||'').toLowerCase());
           items.push({
             id: (a.guid || a.id || ((a.headline || '') + (a.published || ''))),
             title: a.headline || 'Headline',
@@ -259,6 +261,17 @@
       // ensure minimum delay for UX if needed
       const elapsed = Date.now() - started;
       if (elapsed < 300) await new Promise(r => setTimeout(r, 300 - elapsed));
+    }
+  }
+
+  async function ensureInitialData(timeoutMs = 20000) {
+    const start = Date.now();
+    while (Date.now() - start < timeoutMs) {
+      try {
+        if ((state.data.scores && state.data.scores.length) || (state.data.headlines && state.data.headlines.length)) return;
+        await refreshData();
+      } catch {}
+      await new Promise(r => setTimeout(r, 1500));
     }
   }
 
@@ -592,10 +605,10 @@
       if (isStandalone && el.installApp) el.installApp.hidden = true;
     } catch {}
     setActiveTab('scores');
-    // kick off initial load and a follow-up to mitigate first-load network hiccups
+    // kick off initial load and keep retrying briefly until data arrives
     state.refreshRetries = 0;
     refreshData();
-    setTimeout(() => { if (document.visibilityState === 'visible') refreshData().catch(() => {}); }, 2000);
+    ensureInitialData().catch(() => {});
     window.addEventListener('load', () => {
       if (document.visibilityState === 'visible') refreshData().catch(() => {});
     });

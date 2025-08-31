@@ -1,7 +1,8 @@
 {
   "name": "Accessible Sports",
   "short_name": "Sports A11y",
-  "start_url": ".",
+  "start_url": "/Sports-App/",
+  "scope": "/Sports-App/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#0b6efd",
