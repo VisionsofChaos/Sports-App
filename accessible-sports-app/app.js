@@ -143,12 +143,7 @@
         params.set('_', String(Date.now()));
         let url = `${base}?${params.toString()}`;
         let data = await fetchJSON(url);
-        // Fallback: try FCS if FBS empty
-        if (lg === 'cfb' && (!data || !Array.isArray(data.events) || data.events.length === 0)) {
-          params.set('groups', '81');
-          url = `${base}?${params.toString()}`;
-          data = await fetchJSON(url);
-        }
+        // Note: CFB limited to FBS (group 80) by request — no FCS fallback
         // Fallback: try without explicit date if still empty
         if (!data || !Array.isArray(data.events) || data.events.length === 0) {
           const p2 = new URLSearchParams();
@@ -157,11 +152,7 @@
           if (lg === 'cfb') p2.set('groups', '80');
           url = `${base}?${p2.toString()}`;
           data = await fetchJSON(url);
-          if (lg === 'cfb' && (!data || !Array.isArray(data.events) || data.events.length === 0)) {
-            p2.set('groups', '81');
-            url = `${base}?${p2.toString()}`;
-            data = await fetchJSON(url);
-          }
+          // No FCS fallback here either
         }
         const events = (data && data.events) || [];
         for (const ev of events) {
@@ -248,9 +239,13 @@
       await Promise.all([loadScores(), loadHeadlines()]);
       state.lastUpdated = new Date();
       el.lastUpdated.textContent = `v${APP_VERSION} • Updated ${state.lastUpdated.toLocaleTimeString()}`;
-      // Mark all views dirty and render only the active tab for performance
+      // Mark all views dirty and render all tabs so content is present immediately
       state.dirty = { scores: true, headlines: true, stories: true, teams: true };
-      renderActiveTab();
+      renderScores();
+      renderHeadlines();
+      renderStories();
+      renderTeams();
+      state.dirty = { scores: false, headlines: false, stories: false, teams: false };
       localStorage.setItem('a11y_data_backup', JSON.stringify({ ts: Date.now(), data: state.data }));
     } catch (e) {
       console.error('Refresh failed', e);
@@ -674,15 +669,23 @@
             console.log('Install choice', choice && choice.outcome);
           } catch {}
         } else {
-          // No prompt available: show QR so you can install on phone
-          try {
-            const url = PUBLIC_APP_URL;
-            const img = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(url)}`;
-            if (el.qrImg) el.qrImg.src = img;
-            if (el.shareUrl) el.shareUrl.textContent = url;
-            if (el.qrSection) el.qrSection.hidden = false;
-            if (el.copyLink) el.copyLink.focus();
-          } catch {}
+          // No prompt available
+          const ua = navigator.userAgent || '';
+          const isAndroid = /Android/.test(ua);
+          const isChrome = /Chrome\//.test(ua) && !/Edg\//.test(ua) && !/OPR\//.test(ua);
+          if (isAndroid && isChrome) {
+            alert('On Chrome for Android: tap the menu ⋮ → Install app');
+          } else {
+            // Desktop or other browsers: show QR to open/install on phone
+            try {
+              const url = PUBLIC_APP_URL;
+              const img = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(url)}`;
+              if (el.qrImg) el.qrImg.src = img;
+              if (el.shareUrl) el.shareUrl.textContent = url;
+              if (el.qrSection) el.qrSection.hidden = false;
+              if (el.copyLink) el.copyLink.focus();
+            } catch {}
+          }
         }
       });
     }
