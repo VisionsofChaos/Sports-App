@@ -190,9 +190,11 @@
           const web = (a.links && a.links.web && a.links.web.href) || a.link || '';
           const api = (a.links && a.links.api && (a.links.api.news && a.links.api.news.href) || a.links.api && a.links.api.self && a.links.api.self.href) || '';
           const lw = String(web || '').toLowerCase();
-          const isVideo = String(a.type || '').toLowerCase().includes('video') ||
+          const looksLikeVideo = String(a.type || '').toLowerCase().includes('video') ||
             (Array.isArray(a.categories) && a.categories.some(c => String((c && (c.type || c)).toLowerCase()).includes('video'))) ||
             /\bvideo\b/.test(lw) || /\/video\//.test(lw) || /watch/.test(lw) || /highlights?/.test(String(a.headline||'').toLowerCase());
+          // Skip video/highlights items entirely per user preference
+          if (looksLikeVideo) continue;
           items.push({
             id: (a.guid || a.id || ((a.headline || '') + (a.published || ''))),
             title: a.headline || 'Headline',
@@ -201,7 +203,6 @@
             published: a.published || '',
             url: web,
             apiUrl: api,
-            kind: isVideo ? 'video' : 'article',
             story: a.story || '',
             image: (a.images && a.images[0] && (a.images[0].url || a.images[0].href)) || '',
             imageAlt: (a.images && a.images[0] && (a.images[0].name || a.images[0].caption)) || '',
@@ -400,10 +401,9 @@
       card.setAttribute('aria-labelledby', titleId);
       const imgHtml = h.image ? `<img class="thumb" src="${h.image}" alt="${(h.imageAlt || '').replace(/"/g,'&quot;')}" loading="lazy" decoding="async" />` : '';
       const summaryHtml = sanitizeStoryHtml(h.summary || '');
-      const badge = h.kind === 'video' ? `<span class="badge">▶ Video</span>` : '';
       card.innerHTML = `
         ${imgHtml}
-        <h3 id="${titleId}" class="headline-link" tabindex="0">${h.title} ${badge}</h3>
+        <h3 id="${titleId}" class="headline-link" tabindex="0">${h.title}</h3>
         <div class="meta">${h.league}${h.byline ? ' • ' + h.byline : ''}</div>
         <div>${summaryHtml}</div>
       `;
@@ -663,10 +663,11 @@
 
     // PWA install handling
     window.addEventListener('beforeinstallprompt', (e) => {
+      // Capture the event ASAP and show the button
       e.preventDefault();
       state.deferredInstall = e;
       if (el.installApp) el.installApp.hidden = false;
-    });
+    }, { once: false });
     window.addEventListener('appinstalled', () => {
       if (el.installApp) el.installApp.hidden = true;
       state.deferredInstall = null;
@@ -751,13 +752,7 @@
       document.body.style.overflow = 'hidden';
     } catch {}
 
-    // If this headline is a video, show a Play button linking to ESPN
-    if (item.kind === 'video') {
-      const img = item.image ? `<img src="${item.image}" alt="${(item.imageAlt||'').replace(/"/g,'&quot;')}" class="article-image">` : '';
-      const btn = `<p><a class="btn" href="${item.url}" target="_blank" rel="noopener">▶ Play video</a></p>`;
-      el.articleBody.innerHTML = img + btn + (item.summary ? `<p>${sanitizeStoryHtml(item.summary)}</p>` : '');
-      return;
-    }
+    // Video/highlights items are filtered out earlier; treat everything else as article
 
     // Try to load full article body from API if available
     try {
